@@ -1,0 +1,27 @@
+{
+  "name": "backboneBaseView",
+  "version": "1.0.0",
+  "homepage": "https://github.com/dbrekalo/backbone-base-view",
+  "authors": [
+    "Damir Brekalo <dbrekalo@gmail.com>"
+  ],
+  "description": "Backbone Base view with subviews and template handlers",
+  "main": "dist/baseView.min.js",
+  "keywords": [
+    "Backbone",
+    "view",
+    "subview",
+    "template"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "templateManager": "~1"
+  }
+}

@@ -35,6 +35,8 @@
 				$window.off(this.ens);
 			}
 
+			this.beforeClose && this.beforeClose();
+
 			this.remove();
 
 		},

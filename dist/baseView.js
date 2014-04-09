@@ -1,7 +1,12 @@
-;(function($, Backbone){
+;(function($, Backbone, window){
+
+	"use strict";
 
 	$.wk = $.wk || {};
-	var getTemplateHandler = $.wk.getTemplate;
+	var getTemplateHandler = $.wk.getTemplate,
+		instanceCounter = 0,
+		$document = window.app && window.app.$document || $(document);
+		$window = window.app && window.app.$window || $(window);
 
 	$.wk.baseView = Backbone.View.extend({
 
@@ -23,6 +28,11 @@
 
 			if ( this.hasSubviews() ){
 				_.each(this.subviews, function(view){ view.close('parentInitiated'); });
+			}
+
+			if (this.ens) {
+				$document.off(this.ens);
+				$window.off(this.ens);
 			}
 
 			this.remove();
@@ -87,6 +97,14 @@
 
 		},
 
+		/* Event namespace
+		************************************/
+		setupEventNamespace: function(){
+
+			this.ens = this.ens || '.view' + (++instanceCounter);
+
+		},
+
 		/* Template handlers
 		************************************/
 		getTemplate: function(templateName, templatePath, callback){
@@ -105,4 +123,4 @@
 
 	});
 
-})(jQuery, Backbone);
+})(window.jQuery, window.Backbone, window);

@@ -4,7 +4,7 @@
 
 	$.wk = $.wk || {};
 	var getTemplateHandler = $.wk.getTemplate,
-		instanceCounter = 0,
+		ensCounter = 0,
 		$document = window.app && window.app.$document || $(document),
 		$window = window.app && window.app.$window || $(window);
 
@@ -101,7 +101,7 @@
 		************************************/
 		setupEventNamespace: function(){
 
-			this.ens = this.ens || '.view' + (++instanceCounter);
+			this.ens = this.ens || '.view' + (++ensCounter);
 
 		},
 

@@ -5,7 +5,7 @@
 	$.wk = $.wk || {};
 	var getTemplateHandler = $.wk.getTemplate,
 		instanceCounter = 0,
-		$document = window.app && window.app.$document || $(document);
+		$document = window.app && window.app.$document || $(document),
 		$window = window.app && window.app.$window || $(window);
 
 	$.wk.baseView = Backbone.View.extend({

@@ -35,6 +35,15 @@
 				$window.off(this.ens);
 			}
 
+			if (this.onDocCancel.registry) {
+				_.each(this.onDocCancel.registry, function(eventsOn, ens){
+					if (eventsOn) {
+						$document.off(ens);
+						delete this.onDocCancel.registry[ens];
+					}
+				}, this);
+			}
+
 			this.beforeClose && this.beforeClose();
 
 			this.remove();
@@ -99,11 +108,51 @@
 
 		},
 
-		/* Event namespace
+		/* Event handlers
 		************************************/
+
+		onDocCancel: function(key, callback, $cont, unbindOnCancel){
+
+			this.onDocCancel.registry = this.onDocCancel.registry || {};
+			this.setupEventNamespace();
+
+			var ens = this.ens + key,
+				registry = this.onDocCancel.registry,
+				$el = $cont || this.$el;
+
+			if (callback === 'off'){
+				$document.off(ens);
+				registry[ens] = false;
+				return;
+			}
+
+			if (registry[ens]) { return; }
+
+			$document.on('click'+ ens +' keyup' + ens, function(e) {
+
+				if (e.keyCode && e.keyCode === 27) { // Escape keyup
+					callback();
+				} else { // Click
+					var $target = $(e.target);
+					if( !$target.parents().is( $el ) ) { callback(); }
+				}
+
+				if (unbindOnCancel) {
+					$document.off(ens);
+					registry[ens] = false;
+				}
+
+			});
+
+			registry[ens] = true;
+			return this;
+
+		},
+
 		setupEventNamespace: function(){
 
 			this.ens = this.ens || '.view' + (++ensCounter);
+			return this;
 
 		},
 

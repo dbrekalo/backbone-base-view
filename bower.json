@@ -1,6 +1,6 @@
 {
   "name": "backboneBaseView",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "homepage": "https://github.com/dbrekalo/backbone-base-view",
   "authors": [
     "Damir Brekalo <dbrekalo@gmail.com>"
@@ -22,6 +22,7 @@
     "tests"
   ],
   "dependencies": {
-    "templateManager": "~1"
+    "templateManager": ">1",
+    "repository": ">1"
   }
 }

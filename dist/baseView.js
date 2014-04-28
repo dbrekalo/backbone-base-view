@@ -1,9 +1,10 @@
-;(function($, Backbone, window){
+;(function($, Backbone, _, window){
 
 	"use strict";
 
 	$.wk = $.wk || {};
 	var getTemplateHandler = $.wk.getTemplate,
+		require = $.wk.repo && $.wk.repo.require,
 		ensCounter = 0,
 		$document = window.app && window.app.$document || $(document),
 		$window = window.app && window.app.$window || $(window);
@@ -42,6 +43,12 @@
 						delete this.onDocCancel.registry[ens];
 					}
 				}, this);
+			}
+
+			if (this.deferreds) {
+				_.each(this.deferreds, function(deferred){
+					deferred.state() === 'pending' && deferred.reject();
+				});
 			}
 
 			this.beforeClose && this.beforeClose();
@@ -163,15 +170,35 @@
 			var self = this;
 			this.templates = this.templates || {};
 
-			var deffered = getTemplateHandler(templatePath,function(compiledTemplate){
+			var deferred = getTemplateHandler(templatePath,function(compiledTemplate){
 				self.templates[templateName] = compiledTemplate;
 				callback && callback.call(self, compiledTemplate);
 			});
 
-			return deffered;
+			this.deferreds = this.deferreds || [];
+			this.deferreds.push(deferred);
+
+			return deferred;
+
+		},
+
+		/* Require handler
+		************************************/
+		require: function(key, callback, context){
+
+			var deferred = require(key, callback, context);
+
+			this.deferreds = this.deferreds || [];
+			this.deferreds.push(deferred);
+
+			return deferred;
 
 		}
 
 	});
 
-})(window.jQuery, window.Backbone, window);
+	if ( window.app && typeof window.app.baseView === 'undefined' ){
+		window.app.baseView = $.wk.baseView;
+	}
+
+})(window.jQuery, window.Backbone, window._, window);

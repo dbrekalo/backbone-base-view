@@ -22,7 +22,7 @@
     "tests"
   ],
   "dependencies": {
-    "templateManager": ">1",
-    "repository": ">1"
+    "templateManager": ">=1",
+    "repository": ">=1"
   }
 }

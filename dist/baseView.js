@@ -14,7 +14,7 @@
 		constructor: function(){
 
 			this.subviews = {};
-			this.noModelViewCounter = 0;
+			this.modelSubviews = {};
 
 			Backbone.View.apply(this, arguments);
 
@@ -25,11 +25,11 @@
 
 		close: function(parentInitiated){
 
+			this.beforeClose && this.beforeClose();
+
 			if ( !parentInitiated ) { this.trigger('manualClosing'); }
 
-			if ( this.hasSubviews() ){
-				_.each(this.subviews, function(view){ view.close('parentInitiated'); });
-			}
+			this.closeSubviews();
 
 			if (this.ens) {
 				$document.off(this.ens);
@@ -51,9 +51,9 @@
 				});
 			}
 
-			this.beforeClose && this.beforeClose();
-
 			this.remove();
+			this.closed = true;
+			this.afterClose && this.afterClose();
 
 		},
 
@@ -62,6 +62,7 @@
 			if ( !this.hasSubviews() ){ return; }
 			_.each( this.subviews, function(view){ view.close('parentInitiated'); } );
 			this.subviews = {};
+			this.modelSubviews = {};
 
 		},
 
@@ -69,10 +70,16 @@
 
 			var self = this;
 
-			if ( view.model ) { this.subviews[view.model.cid] = view; }
-			else { this.subviews['noModelView' + (++this.noModelViewCounter)] = view; }
+			this.subviews[view.cid] = view;
 
-			view.on('manualClosing', function(){ delete self.subviews[view.model.cid]; });
+			if ( view.model ) { this.modelSubviews[view.model.cid] = view; }
+
+			view.on('manualClosing', function(){
+
+				delete self.subviews[view.cid];
+				if (view.model) { delete self.modelSubviews[view.model.cid]; }
+
+			});
 
 			return view;
 
@@ -80,16 +87,15 @@
 
 		removeSubview: function(model){
 
-			if (!this.subviews[model.cid]) { return false; }
-
-			this.subviews[model.cid].close('parentInitiated');
-			delete this.subviews[model.cid];
+			var view = this.modelSubviews[model.cid];
+			if (!view) { return false; }
+			view.close();
 
 		},
 
 		getSubview: function( model ){
 
-			return this.subviews[model.cid] ? this.subviews[model.cid] : false;
+			return this.modelSubviews[model.cid] ? this.modelSubviews[model.cid] : false;
 
 		},
 

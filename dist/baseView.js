@@ -85,7 +85,7 @@
 
 		},
 
-		removeSubview: function(model){
+		closeSubview: function(model){
 
 			var view = this.modelSubviews[model.cid];
 			if (!view) { return false; }
@@ -102,6 +102,22 @@
 		hasSubviews: function(){
 
 			return _.size(this.subviews) > 0 ? true : false;
+
+		},
+
+		/* Publish / subscribe
+		************************************/
+
+		publishEvent: function(eventName, data){
+
+			$document.trigger(eventName, [data]);
+
+		},
+
+		subscribeToEvent: function(eventName, callback){
+
+			this.setupEventNamespace();
+			$document.on(eventName + this.ens, $.proxy(callback, this));
 
 		},
 

@@ -208,6 +208,8 @@
 		************************************/
 		require: function(key, callback, context){
 
+			context || (context = this);
+
 			var deferred = require(key, callback, context);
 
 			this.deferreds = this.deferreds || [];

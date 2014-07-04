@@ -217,6 +217,30 @@
 
 			return deferred;
 
+		},
+
+		// Wait for asyn resources
+		whenDone: function(resources, callbackDone, callbackFail, context){
+
+			var self = this,
+				deferred = $.Deferred();
+
+			$.when.apply(window, resources).done(function(){
+
+				context || (context = self);
+				callbackDone && callbackDone.call(context);
+				deferred.resolve();
+
+			}).fail(function(){
+
+				context || (context = self);
+				callbackFail && callbackFail.call(context);
+				deferred.reject();
+
+			});
+
+			return deferred;
+
 		}
 
 	});

@@ -23,11 +23,11 @@
 		/* Subviews handlers
 		************************************/
 
-		close: function(parentInitiated){
+		close: function(options){
 
 			this.beforeClose && this.beforeClose();
 
-			if ( !parentInitiated ) { this.trigger('manualClosing'); }
+			if (options && !options.parentClosing) { this.trigger('manualClosing'); }
 
 			this.closeSubviews();
 
@@ -47,7 +47,9 @@
 
 			if (this.deferreds) {
 				_.each(this.deferreds, function(deferred){
-					deferred.state() === 'pending' && deferred.reject();
+					if (deferred.state() === 'pending') {
+						deferred.abort ? deferred.abort() : deferred.reject();
+					}
 				});
 			}
 
@@ -57,29 +59,50 @@
 
 		},
 
-		closeSubviews: function(){
+		closeSubviews: function(group){
 
-			if ( !this.hasSubviews() ){ return; }
-			_.each( this.subviews, function(view){ view.close('parentInitiated'); } );
-			this.subviews = {};
-			this.modelSubviews = {};
+			if (!this.hasSubviews()){
+				return;
+			}
+
+			if (group){
+
+				_.invoke(this['subviews-'+group], 'close');
+				delete this['subviews-'+group];
+
+			} else {
+
+				_.each( this.subviews, function(view){
+					view.close({parentClosing: true});
+				});
+
+				this.subviews = {};
+				this.modelSubviews = {};
+
+			}
 
 		},
 
-		addSubview: function(view){
-
-			var self = this;
+		addSubview: function(view, group){
 
 			this.subviews[view.cid] = view;
 
-			if ( view.model ) { this.modelSubviews[view.model.cid] = view; }
+			if ( view.model ) {
+				this.modelSubviews[view.model.cid] = view;
+			}
 
-			view.on('manualClosing', function(){
+			if (group){
+				this['subviews-'+group] = this['subviews-'+group] || {};
+				this['subviews-'+group][view.cid] = view;
+			}
 
-				delete self.subviews[view.cid];
-				if (view.model) { delete self.modelSubviews[view.model.cid]; }
+			view.on('manualClosing', _.bind(function(){
 
-			});
+				delete this.subviews[view.cid];
+				if (view.model) { delete this.modelSubviews[view.model.cid]; }
+				if (group) { delete this['subviews-'+group][view.cid]; }
+
+			}, this));
 
 			return view;
 
@@ -117,7 +140,7 @@
 		subscribeToEvent: function(eventName, callback){
 
 			this.setupEventNamespace();
-			$document.on(eventName + this.ens, $.proxy(callback, this));
+			$document.on(eventName + this.ens, _.bind(callback, this));
 
 		},
 
@@ -159,7 +182,7 @@
 
 			$document.on('click'+ ens +' keyup' + ens, function(e) {
 
-				if (e.keyCode && e.keyCode === 27) { // Escape keyup
+				if (e.keyCode === 27) { // Escape keyup
 					callback();
 				} else { // Click
 					var $target = $(e.target);

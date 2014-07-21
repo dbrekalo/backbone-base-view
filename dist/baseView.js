@@ -48,7 +48,7 @@
 			if (this.deferreds) {
 				_.each(this.deferreds, function(deferred){
 					if (deferred.state() === 'pending') {
-						deferred.abort ? deferred.abort() : deferred.reject();
+						$.wk.baseView.onCloseWithPendingDeferred(deferred);
 					}
 				});
 			}
@@ -149,8 +149,10 @@
 
 		loadingOn: function(){
 
-			this.$loadingHtml = this.$loadingHtml || $('<div class="loader"><span class="graphics">Loading</span></div>').appendTo( this.$el );
-			this.$loading_html.addClass('on');
+			this.$loadingHtml = this.$loadingHtml || $($.wk.baseView.loadingHtml).appendTo( this.$el );
+			!$.contains(this.el, this.$loadingHtml[0]) &&  this.$loadingHtml.appendTo(this.$el);
+
+			this.$loadingHtml.addClass('on');
 
 		},
 
@@ -220,6 +222,8 @@
 				callback && callback.call(self, compiledTemplate);
 			});
 
+			deferred.baseViewDeferred = 'template: '+ templatePath;
+
 			this.deferreds = this.deferreds || [];
 			this.deferreds.push(deferred);
 
@@ -235,6 +239,7 @@
 
 			var deferred = require(key, callback, context);
 
+			deferred.baseViewDeferred = 'require: '+ key;
 			this.deferreds = this.deferreds || [];
 			this.deferreds.push(deferred);
 
@@ -247,6 +252,12 @@
 
 			var self = this,
 				deferred = $.Deferred();
+
+			!_.isArray(resources) && (resources = [resources]);
+
+			_.each(resources, function(resource){
+				!resource.baseViewDeferred && self.deferreds.push(resource);
+			});
 
 			$.when.apply(window, resources).done(function(){
 
@@ -266,6 +277,13 @@
 
 		}
 
+	});
+
+	$.extend($.wk.baseView, {
+		loadingHtml: '<div class="loader"><span class="graphics">Loading</span></div>',
+		onCloseWithPendingDeferred: function(deferred){
+			deferred.abort ? deferred.abort() : deferred.reject();
+		}
 	});
 
 	if ( window.app && typeof window.app.baseView === 'undefined' ){

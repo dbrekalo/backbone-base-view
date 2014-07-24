@@ -3,13 +3,13 @@
 	"use strict";
 
 	$.wk = $.wk || {};
+
 	var getTemplateHandler = $.wk.getTemplate,
 		require = $.wk.repo && $.wk.repo.require,
-		ensCounter = 0,
 		$document = window.app && window.app.$document || $(document),
 		$window = window.app && window.app.$window || $(window);
 
-	$.wk.baseView = Backbone.View.extend({
+	var BaseView = Backbone.View.extend({
 
 		constructor: function(){
 
@@ -47,8 +47,8 @@
 
 			if (this.deferreds) {
 				_.each(this.deferreds, function(deferred){
-					if (deferred.state() === 'pending') {
-						$.wk.baseView.onCloseWithPendingDeferred(deferred);
+					if (deferred.state && deferred.state() === 'pending') {
+						BaseView.onCloseWithPendingDeferred(deferred);
 					}
 				});
 			}
@@ -149,7 +149,7 @@
 
 		loadingOn: function(){
 
-			this.$loadingHtml = this.$loadingHtml || $($.wk.baseView.loadingHtml).appendTo( this.$el );
+			this.$loadingHtml = this.$loadingHtml || $(BaseView.loadingHtml).appendTo( this.$el );
 			!$.contains(this.el, this.$loadingHtml[0]) &&  this.$loadingHtml.appendTo(this.$el);
 
 			this.$loadingHtml.addClass('on');
@@ -205,7 +205,7 @@
 
 		setupEventNamespace: function(){
 
-			this.ens = this.ens || '.view' + (++ensCounter);
+			this.ens = this.ens || '.view' + this.cid;
 			return this;
 
 		},
@@ -279,15 +279,17 @@
 
 	});
 
-	$.extend($.wk.baseView, {
+	$.extend(BaseView, {
 		loadingHtml: '<div class="loader"><span class="graphics">Loading</span></div>',
 		onCloseWithPendingDeferred: function(deferred){
 			deferred.abort ? deferred.abort() : deferred.reject();
 		}
 	});
 
+	$.wk.baseView = BaseView;
+
 	if ( window.app && typeof window.app.baseView === 'undefined' ){
-		window.app.baseView = $.wk.baseView;
+		window.app.baseView = BaseView;
 	}
 
 })(window.jQuery, window.Backbone, window._, window);

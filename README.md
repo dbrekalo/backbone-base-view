@@ -1,7 +1,7 @@
 #Backbone base view
 
 Baseview is a extension of backbone view with convenient methods for manipulating subviews, assets and events.
-Every view that extends baseView is bootstrapped and able to act as collection view.
+Every view that extends baseView is bootstrapped to act as collection view.
 Methods for async requiring of static assets (javascript files and templates) are available should you choose to use them (dependent libraries have to be included).
 
 ##Api
@@ -65,7 +65,7 @@ loadingOn()
 ```
 Append loader to current view.
 
-###loadingOf
+###loadingOff
 ```javascript
 loadingOf()
 ```
@@ -144,8 +144,7 @@ app.components.list = app.baseView.extend({
 
 	addItem: function(model){
 
-		var $view = this.addSubview(new app.components.listItem());
-		$view.appendTo(this.$list);
+		this.addSubview(new app.components.listItem({'model': model})).$el.appendTo(this.$list);
 
 	},
 

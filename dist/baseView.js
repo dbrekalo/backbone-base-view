@@ -23,13 +23,13 @@
 		/* Subviews handlers
 		************************************/
 
-		close: function(options){
+		close: function(){
 
 			this.beforeClose && this.beforeClose();
 
-			if (options && !options.parentClosing) { this.trigger('manualClosing'); }
-
 			this.closeSubviews();
+
+			this.trigger('closingView');
 
 			if (this.ens) {
 				$document.off(this.ens);
@@ -72,9 +72,7 @@
 
 			} else {
 
-				_.each( this.subviews, function(view){
-					view.close({parentClosing: true});
-				});
+				_.invoke(this.subviews, 'close');
 
 				this.subviews = {};
 				this.modelSubviews = {};
@@ -96,11 +94,11 @@
 				this['subviews-'+group][view.cid] = view;
 			}
 
-			view.on('manualClosing', _.bind(function(){
+			view.on('closingView', _.bind(function(){
 
 				delete this.subviews[view.cid];
 				if (view.model) { delete this.modelSubviews[view.model.cid]; }
-				if (group) { delete this['subviews-'+group][view.cid]; }
+				if (group && this['subviews-'+group]) { delete this['subviews-'+group][view.cid]; }
 
 			}, this));
 

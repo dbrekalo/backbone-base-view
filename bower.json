@@ -1,6 +1,6 @@
 {
   "name": "backboneBaseView",
-  "version": "1.81.1",
+  "version": "1.82.0",
   "homepage": "https://github.com/dbrekalo/backbone-base-view",
   "authors": [
     "Damir Brekalo <dbrekalo@gmail.com>"

@@ -122,7 +122,7 @@
 
 		hasSubviews: function(){
 
-			return _.size(this.subviews) > 0 ? true : false;
+			return _.size(this.subviews) > 0;
 
 		},
 
@@ -135,13 +135,15 @@
 
 		},
 
-		subscribeToEvent: function(eventName, callback){
+		subscribeToEvent: function(eventName, callback, context){
 
 			this.setupEventNamespace();
 
 			var events = _.reduce(_.isArray(eventName) ? eventName : eventName.split(' '), function(memo, eventEl){ return memo + (eventEl + this.ens) + ' '; }, '', this);
 
-			$document.on(events, _.bind(callback, this));
+			context || (context = this);
+
+			$document.on(events, _.bind(callback, context));
 
 		},
 
@@ -254,22 +256,22 @@
 			var self = this,
 				deferred = $.Deferred();
 
+			context || (context = this);
+
 			!_.isArray(resources) && (resources = [resources]);
 
 			_.each(resources, function(resource){
-				!resource.baseViewDeferred && self.deferreds.push(resource);
+				_.isObject(resource) && !resource.baseViewDeferred && self.deferreds.push(resource);
 			});
 
 			$.when.apply(window, resources).done(function(){
 
-				context || (context = self);
-				callbackDone && callbackDone.call(context);
+				callbackDone && callbackDone.apply(context, arguments);
 				deferred.resolve();
 
 			}).fail(function(){
 
-				context || (context = self);
-				callbackFail && callbackFail.call(context);
+				callbackFail && callbackFail.apply(context, arguments);
 				deferred.reject();
 
 			});

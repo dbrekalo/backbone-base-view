@@ -47,7 +47,7 @@
 
 			if (this.deferreds) {
 				_.each(this.deferreds, function(deferred){
-					if (deferred.state && deferred.state() === 'pending') {
+					if (_.isObject(deferred) && deferred.state && deferred.state() === 'pending') {
 						BaseView.onCloseWithPendingDeferred(deferred);
 					}
 				});
@@ -140,7 +140,10 @@
 		subscribeToEvent: function(eventName, callback){
 
 			this.setupEventNamespace();
-			$document.on(eventName + this.ens, _.bind(callback, this));
+
+			var events = _.reduce(_.isArray(eventName) ? eventName : eventName.split(' '), function(memo, eventEl){ return memo + (eventEl + this.ens) + ' '; }, '', this);
+
+			$document.on(events, _.bind(callback, this));
 
 		},
 
@@ -205,7 +208,7 @@
 
 		setupEventNamespace: function(){
 
-			this.ens = this.ens || '.view' + this.cid;
+			this.ens = this.ens || '.ens' + this.cid;
 			return this;
 
 		},

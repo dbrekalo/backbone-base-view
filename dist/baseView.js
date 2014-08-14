@@ -253,16 +253,16 @@
 		// Wait for asyn resources
 		whenDone: function(resources, callbackDone, callbackFail, context){
 
-			var self = this,
-				deferred = $.Deferred();
+			var deferred = $.Deferred();
 
+			this.deferreds = this.deferreds || [];
 			context || (context = this);
 
 			!_.isArray(resources) && (resources = [resources]);
 
 			_.each(resources, function(resource){
-				_.isObject(resource) && !resource.baseViewDeferred && self.deferreds.push(resource);
-			});
+				_.isObject(resource) && !resource.baseViewDeferred && this.deferreds.push(resource);
+			}, this);
 
 			$.when.apply(window, resources).done(function(){
 

@@ -278,6 +278,17 @@
 
 			return deferred;
 
+		},
+
+		retrieveData: function(url, storeKey, callback){
+
+			return this.whenDone($.get(url), function(data){
+
+				this[storeKey || 'data'] = data;
+				callback && callback.apply(this, arguments);
+
+			});
+
 		}
 
 	});

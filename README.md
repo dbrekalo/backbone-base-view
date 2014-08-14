@@ -98,6 +98,12 @@ whenDone(resources, callbackDone, callbackFail, context)
 Shortcut for $.when with default context set to view object for all callbacks. Additionally adds all deferreds to view objects deferreds stack so effective cleanup can be performed on close.
 Accepts resources as array of deferreds or single deferred.
 
+###retrieveData
+```javascript
+retrieveData(url, storeKey, callback)
+```
+Retrieve data from server and save it to current object under storeKey (defaults to 'data') in one line. Returns deferred object;
+
 ##Example view
 ```javascript
 

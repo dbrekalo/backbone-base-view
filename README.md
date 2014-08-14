@@ -98,11 +98,11 @@ whenDone(resources, callbackDone, callbackFail, context)
 Shortcut for $.when with default context set to view object for all callbacks. Additionally adds all deferreds to view objects deferreds stack so effective cleanup can be performed on close.
 Accepts resources as array of deferreds or single deferred.
 
-###retrieveData
+###getData
 ```javascript
-retrieveData(url, storeKey, callback)
+getData(url, storeKey, callback)
 ```
-Retrieve data from server and save it to current object under storeKey (defaults to 'data') in one line. Returns deferred object;
+Retrieve data from url (defaults to current object url property) and save it to current object under storeKey (defaults to 'data') in one line. Returns deferred object;
 
 ##Example view
 ```javascript
@@ -117,6 +117,7 @@ app.components.list = app.baseView.extend({
 
 			this.require('app.components.listItem'),
 			this.getTemplate('main', 'components/list'),
+			this.getData('/api/user', 'userData'),
 			this.collection.fetch()
 
 		], function(){
@@ -137,7 +138,10 @@ app.components.list = app.baseView.extend({
 
 	render: function(){
 
-		this.$el.html(this.templates.main());
+		this.$el.html(this.templates.main({
+			items: this.collection.toJSON(),
+			userData: this.userData
+		}));
 		this.$list = this.$('.list');
 
 		this.collection.each(function(model){

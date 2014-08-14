@@ -280,9 +280,9 @@
 
 		},
 
-		retrieveData: function(url, storeKey, callback){
+		getData: function(url, storeKey, callback){
 
-			return this.whenDone($.get(url), function(data){
+			return this.whenDone($.get(url || this.url), function(data){
 
 				this[storeKey || 'data'] = data;
 				callback && callback.apply(this, arguments);

@@ -147,6 +147,19 @@
 
 		},
 
+		/* Render diff
+		************************************/
+
+		renderDiff: function(template, targetNode) {
+
+			var diffDomInstance = BaseView.getDiffDomInstance(),
+				oldDom = targetNode ? $(targetNode).get(0) : this.$el.get(0),
+				newDom = targetNode ? $(template).get(0) : this.$el.clone().html($(template)).get(0);
+
+			diffDomInstance.apply(oldDom, diffDomInstance.diff(oldDom, newDom));
+
+		},
+
 		/* Loaders
 		************************************/
 
@@ -294,9 +307,20 @@
 	});
 
 	$.extend(BaseView, {
+
 		loadingHtml: '<div class="loader"><span class="graphics">Loading</span></div>',
+
 		onCloseWithPendingDeferred: function(deferred){
+
 			deferred.abort ? deferred.abort() : deferred.reject();
+
+		},
+
+		getDiffDomInstance: function() {
+
+			var ref = BaseView.getDiffDomInstance;
+			return (ref.instance = ref.instance || new window.diffDOM());
+
 		}
 	});
 

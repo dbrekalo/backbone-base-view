@@ -1,6 +1,6 @@
 {
-  "name": "backboneBaseView",
-  "version": "2.0.0-beta.1",
+  "name": "backbone-base-view",
+  "version": "2.0.0-beta.2",
   "description": "Baseview is a extended backbone view with convenient methods for manipulating subviews and events.",
   "main": "src/baseView.js",
   "license": "MIT",

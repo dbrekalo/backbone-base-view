@@ -1,5 +1,5 @@
 #Backbone base view
-Baseview is a extended backbone view with convenient methods for manipulating subviews and events.
+Extended backbone view with convenient methods for manipulating subviews and events.
 Every view that extends baseView is bootstrapped to act as collection view.
 
 ###events

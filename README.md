@@ -1,169 +1,45 @@
 #Backbone base view
-
-Baseview is a extension of backbone view with convenient methods for manipulating subviews, assets and events.
+Baseview is a extended backbone view with convenient methods for manipulating subviews and events.
 Every view that extends baseView is bootstrapped to act as collection view.
-Methods for async requiring of static assets (javascript files and templates) are available should you choose to use them (dependent libraries have to be included).
 
-##Api
-###close
+###events
 ```javascript
-close()
+events: {
+    'click .selector': 'handler',
+    'click {{this.someVariable}}': 'handler', // variable will be injected
+    'one:submit form': 'oneSubmit', // handler will run only once
+    'resize window': 'onWindowResize',
+    'keyup document': 'onDocumentKeyup'
+}
 ```
-Calls view remove after all subviews have been closed, all event listeners in view namespace removed and all pending deferreds canceled.
-
-###beforeClose
-```javascript
-beforeClose()
-```
-Optional hook that fires before close cleanup is performed.
-
-###afterClose
-```javascript
-afterClose()
-```
-Optional hook that fires after close cleanup is performed.
-
-###addSubview
+###addView
 ```javascript
 addSubview(view, group)
 ```
 Adds subview to current view. If optional group parameter is provided adds view to subview group.
 
-###closeSubviews
+###removeViews
 ```javascript
-closeSubviews(group)
+removeViews(group)
 ```
-Closes all view subviews recursively. If group is specified closes only those views belonging to subview group.
+Removes all view subviews recursively. If group is specified removes only views which belong to subview group.
 
-###closeSubview
+###removeViewByModel
 ```javascript
-closeSubview(model)
+removeViewByModel(model)
 ```
 Close subview by providing it's model instance.
 
-###getSubview
+###getViewByModel
 ```javascript
-getSubview(model)
+getViewByModel(model)
 ```
 Get subview by providing it's model instance.
 
-###publishEvent
+###when
 ```javascript
-publishEvent(eventName, data)
+when(resources, doneCallback, failCallback)
 ```
-Publish application wide event and provide data for it.
-
-###subscribeToEvent
-```javascript
-subscribeToEvent(eventName, callback)
-```
-Subscribe to application wide published event.
-
-###loadingOn
-```javascript
-loadingOn()
-```
-Append loader to current view.
-
-###loadingOff
-```javascript
-loadingOf()
-```
-Remove loader for current view.
-
-###onDocCancel
-```javascript
-onDocCancel(key, callback, $cont, unbindOnCancel)
-```
-Manage "document cancel events" like closing view on escape key press or click outside container.
-
-###getTemplate
-```javascript
-getTemplate(templateName, templatePath, callback)
-```
-Stores compiled javascript template to current view under key templates[templateName] and executes callback if provided.
-Returns deferred object. Alias for [templateManager](https://github.com/dbrekalo/templateManager).
-
-###require
-```javascript
-require(key, callback, context)
-```
-Requires resource according to [repository](https://github.com/dbrekalo/repository) documentation.
-After resources under key have been loaded / resolved executes callback if one is provided. Default context is view object.
-
-###whenDone
-```javascript
-whenDone(resources, callbackDone, callbackFail, context)
-```
-Shortcut for $.when with default context set to view object for all callbacks. Additionally adds all deferreds to view objects deferreds stack so effective cleanup can be performed on close.
-Accepts resources as array of deferreds or single deferred.
-
-###getData
-```javascript
-getData(url, storeKey, callback)
-```
-Retrieve data from url (defaults to current object url property) and save it to current object under storeKey (defaults to 'data') in one line. Returns deferred object;
-
-##Example view
-```javascript
-
-app.components.list = app.baseView.extend({
-
-	initialize: function(options){
-
-		this.collection = new app.collections.items();
-
-		this.whenDone([
-
-			this.require('app.components.listItem'),
-			this.getTemplate('main', 'components/list'),
-			this.getData('/api/user', 'userData'),
-			this.collection.fetch()
-
-		], function(){
-
-			this.render();
-
-			this.listenTo(this.collection, 'add', this.addItem);
-
-			this.interval = setInterval(function(){
-
-				this.collection.fetch();
-
-			}.bind(this), 5*1000);
-
-		});
-
-	},
-
-	render: function(){
-
-		this.$el.html(this.templates.main({
-			items: this.collection.toJSON(),
-			userData: this.userData
-		}));
-		this.$list = this.$('.list');
-
-		this.collection.each(function(model){
-
-			this.addItem(model);
-
-		}, this);
-
-	},
-
-	addItem: function(model){
-
-		this.addSubview(new app.components.listItem({'model': model})).$el.appendTo(this.$list);
-
-	},
-
-	beforeClose: function(){
-
-		this.interval && clearInterval(this.interval);
-
-	}
-
-});
-
-```
+Shortcut for $.when with default context set to view instance for all callbacks.
+Additionally adds all deferreds to view instance deferreds stack so effective cleanup can be performed on view removal.
+Accepts resources as single or array of deferreds.

@@ -1,16 +1,38 @@
 {
   "name": "backboneBaseView",
-  "version": "1.92.0",
+  "version": "2.0.0-beta.1",
+  "description": "Baseview is a extended backbone view with convenient methods for manipulating subviews and events.",
+  "main": "src/baseView.js",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/dbrekalo/backbone-base-view"
   },
+  "scripts": {
+    "watch": "grunt build && grunt watch",
+    "build": "grunt build"
+  },
+  "keywords": [
+    "Backbone",
+    "baseview",
+    "view",
+    "subview"
+  ],
   "devDependencies": {
     "grunt": "^0.4.5",
+    "grunt-bump": "^0.7.0",
+    "grunt-cli": "^0.1.13",
     "grunt-contrib-copy": "^0.6.0",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-contrib-uglify": "^0.6.0",
     "grunt-contrib-watch": "^0.6.1",
+    "grunt-include-replace": "^3.2.0",
+    "grunt-jscs": "^1.5.0",
     "load-grunt-tasks": "^0.6.0"
+  },
+  "dependencies": {
+    "backbone": "^1.2.3",
+    "jquery": ">=1.11",
+    "underscore": "^1.8.3"
   }
 }

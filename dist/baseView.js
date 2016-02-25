@@ -1,333 +1,242 @@
-;(function($, Backbone, _, window){
+(function(root, factory) {
 
-	"use strict";
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery', 'backbone', 'underscore'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory(require('jquery'), require('backbone'), require('underscore'));
+    } else {
+        root.BaseView = factory(root.jQuery, root.Backbone, root._);
+    }
 
-	$.wk = $.wk || {};
+}(this, function($, Backbone, _) {
 
-	var getTemplateHandler = $.wk.getTemplate,
-		require = $.wk.repo && $.wk.repo.require,
-		$document = window.app && window.app.$document || $(document),
-		$window = window.app && window.app.$window || $(window);
+    var root = this,
+        viewCounter = 0,
+        variableInEventStringRE = /{{(\S+)}}/g,
+        parseEventString = function(eventString, context) {
 
-	var BaseView = Backbone.View.extend({
+            return eventString.replace(variableInEventStringRE, function(match, namespace) {
 
-		constructor: function(){
+                var isInCurrentContext = namespace.indexOf('this.') === 0,
+                    current = isInCurrentContext ? context : root,
+                    pieces = (isInCurrentContext ? namespace.slice(5) : namespace).split('.');
 
-			this.subviews = {};
-			this.modelSubviews = {};
+                for (var i in pieces) {
+                    current = current[pieces[i]];
+                    if (typeof current === 'undefined') {
+                        throw new Error('Undefined variable in event string');
+                    }
+                }
 
-			Backbone.View.apply(this, arguments);
+                return current;
 
-		},
+            });
 
-		/* Subviews handlers
-		************************************/
+        };
 
-		close: function(){
+    var BaseView = Backbone.View.extend({
 
-			this.beforeClose && this.beforeClose();
+        constructor: function() {
 
-			this.closeSubviews();
+            Backbone.View.apply(this, arguments);
+            this.events && this.setupEvents();
 
-			this.trigger('closingView');
+        },
 
-			if (this.ens) {
-				$document.off(this.ens);
-				$window.off(this.ens);
-			}
+        delegatedEvents: true,
 
-			if (this.onDocCancel.registry) {
-				_.each(this.onDocCancel.registry, function(eventsOn, ens){
-					if (eventsOn) {
-						$document.off(ens);
-						delete this.onDocCancel.registry[ens];
-					}
-				}, this);
-			}
+        setupEvents: function(eventsMap) {
 
-			if (this.deferreds) {
-				_.each(this.deferreds, function(deferred){
-					if (_.isObject(deferred) && deferred.state && deferred.state() === 'pending') {
-						BaseView.onCloseWithPendingDeferred(deferred);
-					}
-				});
-			}
+            var eventNamespace = this.ens = this.ens || '.' + this.cid,
+                events = eventsMap || this.events,
+                self = this,
+                specialSelectors = {
+                    'window': root,
+                    'document': root.document
+                };
 
-			this.remove();
-			this.closed = true;
-			this.afterClose && this.afterClose();
+            _.each(typeof events === 'function' ? events.call(this) : events, function(handler, eventString) {
 
-		},
+                eventString = parseEventString(eventString, self);
 
-		closeSubviews: function(group){
+                var isOneEvent = eventString.indexOf('one:') === 0,
+                    splitEventString = (isOneEvent ? eventString.slice(4) : eventString).split(' '),
+                    eventName = splitEventString[0] + eventNamespace,
+                    eventSelector = splitEventString.slice(1).join(' '),
+                    $el = self.$el;
 
-			if (!this.hasSubviews()){
-				return;
-			}
+                if (specialSelectors[eventSelector]) {
+                    $el = self['$' + eventSelector] = self['$' + eventSelector] || $(specialSelectors[eventSelector]);
+                    eventSelector = undefined;
+                } else if (!self.delegatedEvents) {
+                    (self.elementsWithBoundEvents = self.elementsWithBoundEvents || []).push($el = $el.find(eventSelector));
+                    eventSelector = undefined;
+                }
 
-			if (group){
+                $el[isOneEvent ? 'one' : 'on'](eventName, eventSelector, function() {
+                    (typeof handler === 'function' ? handler : self[handler]).apply(self, arguments);
+                });
 
-				_.invoke(this['subviews-'+group], 'close');
-				delete this['subviews-'+group];
+            });
 
-			} else {
+            return this;
 
-				_.invoke(this.subviews, 'close');
+        },
 
-				this.subviews = {};
-				this.modelSubviews = {};
+        removeEvents: function() {
 
-			}
+            var eventNamespace = this.ens;
 
-		},
+            if (eventNamespace) {
 
-		addSubview: function(view, group){
+                this.$el && this.$el.off(eventNamespace);
+                this.$document && this.$document.off(eventNamespace);
+                this.$window && this.$window.off(eventNamespace);
 
-			this.subviews[view.cid] = view;
+                if (this.elementsWithBoundEvents) {
+                    _.each(this.elementsWithBoundEvents, function($el) {
+                        $el.off(eventNamespace);
+                    });
+                    this.elementsWithBoundEvents = null;
+                }
 
-			if ( view.model ) {
-				this.modelSubviews[view.model.cid] = view;
-			}
+            }
 
-			if (group){
-				this['subviews-'+group] = this['subviews-'+group] || {};
-				this['subviews-'+group][view.cid] = view;
-			}
+            return this;
 
-			view.on('closingView', _.bind(function(){
+        },
 
-				delete this.subviews[view.cid];
-				if (view.model) { delete this.modelSubviews[view.model.cid]; }
-				if (group && this['subviews-'+group]) { delete this['subviews-'+group][view.cid]; }
+        addView: function(view, group) {
 
-			}, this));
+            this.views = this.views || {};
+            this.views[view.cid] = view;
 
-			return view;
+            if (view.model) {
+                this.viewsWithModel = this.viewsWithModel || {};
+                this.viewsWithModel[view.model.cid] = view;
+            }
 
-		},
+            if (group) {
+                this.viewsGroups = this.viewsGroups || {};
+                this.viewsGroups[group] = this.viewsGroups[group] || {};
+                this.viewsGroups[group][view.cid] = view;
+            }
 
-		closeSubview: function(model){
+            this.listenTo(view, 'afterRemove', function() {
 
-			var view = this.modelSubviews[model.cid];
-			if (!view) { return false; }
-			view.close();
+                delete this.views[view.cid];
 
-		},
+                if (this.viewsWithModel) {
+                    delete this.viewsWithModel[view.model.cid];
+                }
 
-		getSubview: function( model ){
+                if (group && this.viewsGroups && this.viewsGroups[group]) {
+                    delete this.viewsGroups[group][view.cid];
+                }
 
-			return this.modelSubviews[model.cid] ? this.modelSubviews[model.cid] : false;
+            });
 
-		},
+            return view;
 
-		hasSubviews: function(){
+        },
 
-			return _.size(this.subviews) > 0;
+        removeViews: function(group) {
 
-		},
+            if (group) {
 
-		/* Publish / subscribe
-		************************************/
+                if (this.viewsGroups && this.viewsGroups[group]) {
+                    _.invoke(this.viewsGroups[group], 'remove');
+                    delete this.viewsGroups[group];
+                }
 
-		publishEvent: function(eventName, data){
+            } else {
 
-			$document.trigger(eventName, [data]);
+                this.views && _.invoke(this.views, 'remove');
 
-		},
+                delete this.views;
+                delete this.viewsWithModel;
+                delete this.viewsGroups;
 
-		subscribeToEvent: function(eventName, callback, context){
+            }
 
-			this.setupEventNamespace();
+            return this;
 
-			var events = _.reduce(_.isArray(eventName) ? eventName : eventName.split(' '), function(memo, eventEl){ return memo + (eventEl + this.ens) + ' '; }, '', this);
+        },
 
-			context || (context = this);
+        getViewByModel: function(model) {
 
-			$document.on(events, _.bind(callback, context));
+            return this.viewsWithModel && this.viewsWithModel[model.cid];
 
-		},
+        },
 
-		/* Render diff
-		************************************/
+        removeViewByModel: function(model) {
 
-		renderDiff: function(template, targetNode) {
+            this.viewsWithModel && this.viewsWithModel[model.cid] && this.viewsWithModel[model.cid].remove();
+            return this;
 
-			var diffDomInstance = BaseView.getDiffDomInstance(),
-				oldDom = targetNode ? $(targetNode).get(0) : this.$el.get(0),
-				newDom = targetNode ? $(template).get(0) : this.$el.clone().html($(template)).get(0);
+        },
 
-			diffDomInstance.apply(oldDom, diffDomInstance.diff(oldDom, newDom));
+        addDeferred: function(deferred) {
 
-		},
+            this.deferreds = this.deferreds || [];
 
-		/* Loaders
-		************************************/
+            _.indexOf(this.deferreds, deferred) < 0 && this.deferreds.push(deferred);
 
-		loadingOn: function(){
+            return deferred;
 
-			this.$loadingHtml = this.$loadingHtml || $(BaseView.loadingHtml).appendTo( this.$el );
-			!$.contains(this.el, this.$loadingHtml[0]) &&  this.$loadingHtml.appendTo(this.$el);
+        },
 
-			this.$loadingHtml.addClass('on');
+        abortDeferreds: function() {
 
-		},
+            this.deferreds && _.each(this.deferreds, function(deferred) {
 
-		loadingOff: function(){
+                if (typeof deferred === 'object' && deferred.state && deferred.state() === 'pending') {
+                    deferred.abort ? deferred.abort() : deferred.reject();
+                }
 
-			if ( this.$loadingHtml ) { this.$loadingHtml.removeClass('on'); }
+            });
 
-		},
+            delete this.deferreds;
 
-		/* Event handlers
-		************************************/
+            return this;
 
-		onDocCancel: function(key, callback, $cont, unbindOnCancel){
+        },
 
-			this.onDocCancel.registry = this.onDocCancel.registry || {};
-			this.setupEventNamespace();
+        when: function(resources, doneCallback, failCallback) {
 
-			var ens = this.ens + key,
-				registry = this.onDocCancel.registry,
-				$el = $cont || this.$el,
-				self = this;
+            _.each(resources = _.isArray(resources) ? resources : [resources], function(resource) {
+                this.addDeferred(resource);
+            }, this);
 
-			if (callback === 'off'){
-				$document.off(ens);
-				registry[ens] = false;
-				return;
-			}
+            return $.when.apply(root, resources)
+                .done(_.bind(doneCallback, this))
+                .fail(_.bind(failCallback, this));
 
-			if (registry[ens]) { return; }
+        },
 
-			$document.on('click'+ ens +' keyup' + ens, function(e) {
+        remove: function() {
 
-				if (e.keyCode === 27 || (!$(e.target).is($el) && !$.contains($el.get(0), e.target))) {
+            this.trigger('beforeRemove');
+            this.removeEvents().abortDeferreds().removeViews();
+            Backbone.View.prototype.remove.call(this);
+            this.trigger('afterRemove');
 
-					callback.apply(self, arguments);
+            return this;
+        },
 
-					if (unbindOnCancel) {
-						$document.off(ens);
-						registry[ens] = false;
-					}
+        setElement: function(element) {
 
-				}
+            this._setElement(element);
 
-			});
+            return this;
 
-			registry[ens] = true;
-			return this;
+        }
 
-		},
+    });
 
-		setupEventNamespace: function(){
+    BaseView.prototype.undelegateEvents = BaseView.prototype.removeEvents;
+    BaseView.prototype.delegateEvents = BaseView.prototype.setupEvents;
 
-			this.ens = this.ens || '.ens' + this.cid;
-			return this;
+    return BaseView;
 
-		},
-
-		/* Template handlers
-		************************************/
-		getTemplate: function(templateName, templatePath, callback){
-
-			var self = this;
-			this.templates = this.templates || {};
-
-			var deferred = getTemplateHandler(templatePath,function(compiledTemplate){
-				self.templates[templateName] = compiledTemplate;
-				callback && callback.call(self, compiledTemplate);
-			});
-
-			deferred.baseViewDeferred = 'template: '+ templatePath;
-
-			this.deferreds = this.deferreds || [];
-			this.deferreds.push(deferred);
-
-			return deferred;
-
-		},
-
-		/* Require handler
-		************************************/
-		require: function(key, callback, context){
-
-			context || (context = this);
-
-			var deferred = require(key, callback, context);
-
-			deferred.baseViewDeferred = 'require: '+ key;
-			this.deferreds = this.deferreds || [];
-			this.deferreds.push(deferred);
-
-			return deferred;
-
-		},
-
-		// Wait for asyn resources
-		whenDone: function(resources, callbackDone, callbackFail, context){
-
-			var deferred = $.Deferred();
-
-			this.deferreds = this.deferreds || [];
-			context || (context = this);
-
-			!_.isArray(resources) && (resources = [resources]);
-
-			_.each(resources, function(resource){
-				_.isObject(resource) && !resource.baseViewDeferred && this.deferreds.push(resource);
-			}, this);
-
-			$.when.apply(window, resources).done(function(){
-
-				callbackDone && callbackDone.apply(context, arguments);
-				deferred.resolve();
-
-			}).fail(function(){
-
-				callbackFail && callbackFail.apply(context, arguments);
-				deferred.reject();
-
-			});
-
-			return deferred;
-
-		},
-
-		getData: function(url, storeKey, callback){
-
-			return this.whenDone($.get(url || this.url), function(data){
-
-				this[storeKey || 'data'] = data;
-				callback && callback.apply(this, arguments);
-
-			});
-
-		}
-
-	});
-
-	$.extend(BaseView, {
-
-		loadingHtml: '<div class="loader"><span class="graphics">Loading</span></div>',
-
-		onCloseWithPendingDeferred: function(deferred){
-
-			deferred.abort ? deferred.abort() : deferred.reject();
-
-		},
-
-		getDiffDomInstance: function() {
-
-			var ref = BaseView.getDiffDomInstance;
-			return (ref.instance = ref.instance || new window.diffDOM());
-
-		}
-	});
-
-	$.wk.baseView = BaseView;
-
-	if ( window.app && typeof window.app.baseView === 'undefined' ){
-		window.app.baseView = BaseView;
-	}
-
-})(window.jQuery, window.Backbone, window._, window);
+}));

@@ -208,9 +208,11 @@
                 this.addDeferred(resource);
             }, this);
 
-            return $.when.apply(root, resources)
-                .done(_.bind(doneCallback, this))
-                .fail(_.bind(failCallback, this));
+            var deferred = $.when.apply(root, resources);
+            doneCallback && deferred.done(_.bind(doneCallback, this));
+            failCallback && deferred.fail(_.bind(failCallback, this));
+
+            return deferred;
 
         },
 

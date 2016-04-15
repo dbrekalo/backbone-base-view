@@ -126,7 +126,7 @@
 
                 delete this.views[view.cid];
 
-                if (this.viewsWithModel) {
+                if (view.model && this.viewsWithModel) {
                     delete this.viewsWithModel[view.model.cid];
                 }
 

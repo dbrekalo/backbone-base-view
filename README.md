@@ -14,27 +14,57 @@ events: {
 ```
 ###addView
 ```javascript
-addSubview(view, group)
+addView(view, group)
 ```
-Adds subview to current view. If optional group parameter is provided adds view to subview group.
+Adds target view to current view. If optional group is provided adds view to subview group.
+
+###hasView
+```javascript
+hasView(view)
+```
+Check if target view is subview.
+
+###getGroupViews
+```javascript
+getGroupViews(group)
+```
+Get group subviews as array
+
+###detachView
+```javascript
+detachView()
+```
+Detach view from parent registry
+
+###attachToView
+```javascript
+attachToView(view, group)
+```
+Detach view from parent registry and attach to another view.
 
 ###removeViews
 ```javascript
 removeViews(group)
 ```
-Removes all view subviews recursively. If group is specified removes only views which belong to subview group.
+Removes all subviews recursively. If group is specified removes only views which belong to subview group.
 
-###removeViewByModel
+###remove
 ```javascript
-removeViewByModel(model)
+remove()
 ```
-Close subview by providing it's model instance.
+Does extended cleanup and triggers "beforeRemove" and "afterRemove" events.
 
 ###getViewByModel
 ```javascript
 getViewByModel(model)
 ```
 Get subview by providing it's model instance.
+
+###removeViewByModel
+```javascript
+removeViewByModel(model)
+```
+Close subview by providing it's model instance.
 
 ###when
 ```javascript

@@ -122,7 +122,7 @@
                 this.viewsGroups[group][view.cid] = view;
             }
 
-            this.listenTo(view, 'afterRemove', function() {
+            this.listenToOnce(view, 'afterRemove detachView', function() {
 
                 delete this.views[view.cid];
 
@@ -137,6 +137,33 @@
             });
 
             return view;
+
+        },
+
+        getGroupViews: function(groupName) {
+
+            return this.viewsGroups && this.viewsGroups[groupName] ? _.values(this.viewsGroups[groupName]) : [];
+
+        },
+
+        hasView: function(view) {
+
+            return this.views && !!this.views[view.cid];
+
+        },
+
+        detachView: function() {
+
+            this.trigger('detachView');
+            return this;
+
+        },
+
+        attachToView: function(view, group) {
+
+            this.detachView();
+            view.addView(this, group);
+            return this;
 
         },
 

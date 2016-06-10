@@ -51,8 +51,8 @@
                 events = eventsMap || this.events,
                 self = this,
                 specialSelectors = {
-                    'window': root,
-                    'document': root.document
+                    'window': window,
+                    'document': window.document
                 };
 
             _.each(typeof events === 'function' ? events.call(this) : events, function(handler, eventString) {

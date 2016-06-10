@@ -1,6 +1,6 @@
 {
   "name": "backboneBaseView",
-  "version": "2.0.0-beta.5",
+  "version": "2.0.0-beta.6",
   "description": "Baseview is a extended backbone view with convenient methods for manipulating subviews and events.",
   "homepage": "https://github.com/dbrekalo/backbone-base-view",
   "authors": [

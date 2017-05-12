@@ -322,6 +322,15 @@
         delegateEvents: BaseView.prototype.setupEvents
     });
 
+    _.each(['appendTo', 'prependTo', 'insertBefore', 'insertAfter'], function(methodName) {
+
+        BaseView.prototype[methodName] = function(selector) {
+            this.$el[methodName](selector instanceof BaseView ? selector.$el : selector);
+            return this;
+        };
+
+    });
+
     return BaseView;
 
 }));

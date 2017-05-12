@@ -37,12 +37,18 @@
 
         constructor: function(options) {
 
+            if (this.assignOptions) {
+                var defaults = _.result(this, 'defaults');
+                this.options = this.assignOptions === 'deep' ? $.extend(true, {}, defaults, options) : _.extend({}, defaults, options);
+            }
+
             Backbone.View.apply(this, arguments);
             this.events && this.setupEvents();
 
         },
 
         delegatedEvents: true,
+        assignOptions: false,
 
         setupEvents: function(eventsMap) {
 

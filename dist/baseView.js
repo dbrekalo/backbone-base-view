@@ -52,13 +52,13 @@
 
         setupEvents: function(eventsMap) {
 
-            var eventNamespace = this.ens = this.ens || '.' + this.cid,
-                events = eventsMap || this.events,
-                self = this,
-                specialSelectors = {
-                    'window': window,
-                    'document': window.document
-                };
+            var eventNamespace = this.ens = this.ens || '.' + this.cid;
+            var events = eventsMap || this.events;
+            var self = this;
+            var specialSelectors = {
+                'window': window,
+                'document': window.document
+            };
 
             _.each(typeof events === 'function' ? events.call(this) : events, function(handler, eventString) {
 
@@ -88,6 +88,53 @@
 
         },
 
+        addDismissListener: function(listenerName, options) {
+
+            var self = this;
+
+            if (!listenerName) {
+                throw new Error('Dismiss listener name not speficied');
+            }
+
+            options = $.extend({$el: this.$el}, options);
+
+            this.$document = this.$document || $(document);
+            this.ens = this.ens || '.' + this.cid;
+            this.dismissListeners = this.dismissListeners || {};
+
+            if (!this.dismissListeners[listenerName]) {
+
+                this.dismissListeners[listenerName] = function(e) {
+
+                    if (e.keyCode === 27 || (!$(e.target).is(options.$el) && !$.contains(options.$el.get(0), e.target))) {
+                        self[listenerName].call(self);
+                    }
+
+                };
+
+                this.$document.on('click' + this.ens + ' keyup' + this.ens, this.dismissListeners[listenerName]);
+
+            }
+
+            return this;
+
+        },
+
+        removeDismissListener: function(listenerName) {
+
+            if (!listenerName) {
+                throw new Error('Name of dismiss listener to remove not specified');
+            }
+
+            if (this.dismissListeners && this.dismissListeners[listenerName]) {
+                this.$document.off('click keyup', this.dismissListeners[listenerName]);
+                delete this.dismissListeners[listenerName];
+            }
+
+            return this;
+
+        },
+
         removeEvents: function() {
 
             var eventNamespace = this.ens;
@@ -102,8 +149,10 @@
                     _.each(this.elementsWithBoundEvents, function($el) {
                         $el.off(eventNamespace);
                     });
-                    this.elementsWithBoundEvents = null;
+                    delete this.elementsWithBoundEvents;
                 }
+
+                delete this.dismissListeners;
 
             }
 

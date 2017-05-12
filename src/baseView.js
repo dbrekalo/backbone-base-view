@@ -10,33 +10,32 @@
 
 }(this, function($, Backbone, _) {
 
-    var root = this,
-        viewCounter = 0,
-        variableInEventStringRE = /{{(\S+)}}/g,
-        parseEventString = function(eventString, context) {
+    var root = this;
+    var variableInEventStringRE = /{{(\S+)}}/g;
+    var parseEventString = function(eventString, context) {
 
-            return eventString.replace(variableInEventStringRE, function(match, namespace) {
+        return eventString.replace(variableInEventStringRE, function(match, namespace) {
 
-                var isInCurrentContext = namespace.indexOf('this.') === 0,
-                    current = isInCurrentContext ? context : root,
-                    pieces = (isInCurrentContext ? namespace.slice(5) : namespace).split('.');
+            var isInCurrentContext = namespace.indexOf('this.') === 0,
+                current = isInCurrentContext ? context : root,
+                pieces = (isInCurrentContext ? namespace.slice(5) : namespace).split('.');
 
-                for (var i in pieces) {
-                    current = current[pieces[i]];
-                    if (typeof current === 'undefined') {
-                        throw new Error('Undefined variable in event string');
-                    }
+            for (var i in pieces) {
+                current = current[pieces[i]];
+                if (typeof current === 'undefined') {
+                    throw new Error('Undefined variable in event string');
                 }
+            }
 
-                return current;
+            return current;
 
-            });
+        });
 
-        };
+    };
 
     var BaseView = Backbone.View.extend({
 
-        constructor: function() {
+        constructor: function(options) {
 
             Backbone.View.apply(this, arguments);
             this.events && this.setupEvents();
@@ -148,7 +147,7 @@
 
         hasView: function(view) {
 
-            return this.views && !!this.views[view.cid];
+            return this.views && Boolean(this.views[view.cid]);
 
         },
 
@@ -263,8 +262,10 @@
 
     });
 
-    BaseView.prototype.undelegateEvents = BaseView.prototype.removeEvents;
-    BaseView.prototype.delegateEvents = BaseView.prototype.setupEvents;
+    _.extend(BaseView.prototype, {
+        undelegateEvents: BaseView.prototype.removeEvents,
+        delegateEvents: BaseView.prototype.setupEvents
+    });
 
     return BaseView;
 

@@ -102,6 +102,6 @@ module.exports = function(grunt) {
     require('load-grunt-tasks')(grunt);
 
     grunt.registerTask('default', ['build', 'watch']);
-    grunt.registerTask('build', ['eslint', 'uglify', 'copy']);
+    grunt.registerTask('build', ['eslint', 'uglify', 'copy', 'buildDemo']);
 
 };

@@ -119,6 +119,20 @@ describe('BaseView events', function() {
 
     });
 
+    it('can be undefined when produced by function', function() {
+
+        var View = BaseView.extend({
+            events: function() {
+                return undefined;
+            }
+        });
+
+        var view = new View({el: $el});
+
+        assert.isUndefined(view.ens);
+
+    });
+
     it('can be defined as one time events', function(done) {
 
         var clickCounter = 0;

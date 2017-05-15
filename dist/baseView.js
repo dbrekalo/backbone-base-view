@@ -12,8 +12,11 @@
 }(this, function($, Backbone, _) {
 
     var variableInEventStringRE = /{{(\S+)}}/g;
-
-    var parseEventString = function(eventString, context) {
+    var specialSelectors = {
+        'window': window,
+        'document': window.document
+    };
+    var parseEventVariables = function(eventString, context) {
 
         return eventString.replace(variableInEventStringRE, function(match, namespace) {
 
@@ -49,41 +52,46 @@
         },
 
         delegatedEvents: true,
+        parseEventVariables: true,
         assignOptions: false,
 
         setupEvents: function(eventsMap) {
 
-            var eventNamespace = this.ens = this.ens || '.' + this.cid;
-            var events = eventsMap || this.events;
+            var eventsProvider = eventsMap || this.events;
+            var eventList = typeof eventsProvider === 'function' ? eventsProvider.call(this) : eventsProvider;
             var self = this;
-            var specialSelectors = {
-                'window': window,
-                'document': window.document
-            };
 
-            _.each(typeof events === 'function' ? events.call(this) : events, function(handler, eventString) {
+            if (eventList) {
 
-                eventString = parseEventString(eventString, self);
+                var eventNamespace = this.ens = this.ens || '.' + this.cid;
 
-                var isOneEvent = eventString.indexOf('one:') === 0,
-                    splitEventString = (isOneEvent ? eventString.slice(4) : eventString).split(' '),
-                    eventName = splitEventString[0] + eventNamespace,
-                    eventSelector = splitEventString.slice(1).join(' '),
-                    $el = self.$el;
+                _.each(eventList, function(handler, eventString) {
 
-                if (specialSelectors[eventSelector]) {
-                    $el = self['$' + eventSelector] = self['$' + eventSelector] || $(specialSelectors[eventSelector]);
-                    eventSelector = undefined;
-                } else if (!self.delegatedEvents) {
-                    (self.elementsWithBoundEvents = self.elementsWithBoundEvents || []).push($el = $el.find(eventSelector));
-                    eventSelector = undefined;
-                }
+                    if (self.parseEventVariables) {
+                        eventString = parseEventVariables(eventString, self);
+                    }
 
-                $el[isOneEvent ? 'one' : 'on'](eventName, eventSelector, function() {
-                    (typeof handler === 'function' ? handler : self[handler]).apply(self, arguments);
+                    var isOneEvent = eventString.indexOf('one:') === 0,
+                        splitEventString = (isOneEvent ? eventString.slice(4) : eventString).split(' '),
+                        eventName = splitEventString[0] + eventNamespace,
+                        eventSelector = splitEventString.slice(1).join(' '),
+                        $el = self.$el;
+
+                    if (specialSelectors[eventSelector]) {
+                        $el = self['$' + eventSelector] = self['$' + eventSelector] || $(specialSelectors[eventSelector]);
+                        eventSelector = undefined;
+                    } else if (!self.delegatedEvents) {
+                        (self.elementsWithBoundEvents = self.elementsWithBoundEvents || []).push($el = $el.find(eventSelector));
+                        eventSelector = undefined;
+                    }
+
+                    $el[isOneEvent ? 'one' : 'on'](eventName, eventSelector, function() {
+                        (typeof handler === 'function' ? handler : self[handler]).apply(self, arguments);
+                    });
+
                 });
 
-            });
+            }
 
             return this;
 

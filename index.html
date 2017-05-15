@@ -13,7 +13,14 @@ var view = new View({foo:'bar'});
     'resize window': 'onWindowResize',
     'keyup document': 'onDocumentKeyup'
 }
-</code></pre><hr class="attireSeparator mod1"><h3 id="adddismisslistener-listenername-" class="attireTitleType3">addDismissListener(listenerName)</h3><p class="attireTextType2">When escape key is pressed or something outside of view.$el is clicked instance.listenerName will be invoked.</p><pre class="attireCodeHighlight"><code class="lang-js">...
+</code></pre><hr class="attireSeparator mod1"><h3 id="delegatedevents-true-false" class="attireTitleType3">delegatedEvents: true|false</h3><p class="attireTextType2">View event handlers are delegated to instance element by default. Set to false to bind directly to elements found via event string selector.</p><pre class="attireCodeHighlight"><code class="lang-js">var View = BaseView.extend({
+    delegatedEvents: false,
+    events: {
+        'click .selector': 'handler'
+    }
+});
+var view = new View({foo:'bar'});
+</code></pre><hr class="attireSeparator mod1"><h3 id="adddismisslistener-listenername-" class="attireTitleType3">addDismissListener(listenerName)</h3><p class="attireTextType2">When escape key is pressed or something outside of view.$el is clicked view.listenerName will be invoked.</p><pre class="attireCodeHighlight"><code class="lang-js">...
 open: function() {
     this.$el.addClass('active');
     this.addDismissListener('close');
@@ -23,14 +30,14 @@ close: function() {
     this.removeDismissListener('close');
 }
 ...
-</code></pre><hr class="attireSeparator mod1"><h3 id="removedismisslistener-listenername-" class="attireTitleType3">removeDismissListener(listenerName)</h3><p class="attireTextType2">Used for removing dismiss listeners. See example above.</p><hr class="attireSeparator mod1"><h3 id="addview-view-groupname-" class="attireTitleType3">addView(view, groupName)</h3><p class="attireTextType2">Used to setup parent-child view relationship. Child view is added to parent view group if groupName is specified.</p><pre class="attireCodeHighlight"><code class="lang-js">...
+</code></pre><hr class="attireSeparator mod1"><h3 id="removedismisslistener-listenername-" class="attireTitleType3">removeDismissListener(listenerName)</h3><p class="attireTextType2">Use to remove dismiss listeners. See example above.</p><hr class="attireSeparator mod1"><h3 id="addview-view-groupname-" class="attireTitleType3">addView(view, groupName)</h3><p class="attireTextType2">Use to setup parent-child view relationship. Child view is added to parent view group if groupName is specified.</p><pre class="attireCodeHighlight"><code class="lang-js">...
 initialize: function() {
     this.collection.each(function(model) {
         this.addView(new ChildView, 'itemList');
     }, this);
 }
 ...
-</code></pre><hr class="attireSeparator mod1"><h3 id="getgroupviews-groupname-" class="attireTitleType3">getGroupViews(groupName)</h3><p class="attireTextType2">Retrieve array of child views stored in group.</p><pre class="attireCodeHighlight"><code class="lang-js">...
+</code></pre><hr class="attireSeparator mod1"><h3 id="getgroupviews-groupname-" class="attireTitleType3">getGroupViews(groupName)</h3><p class="attireTextType2">Retrieve child views stored in parent group as array.</p><pre class="attireCodeHighlight"><code class="lang-js">...
 render: function() {
     _.each(this.getGroupViews('itemList'), function(subView) {
         subView.render();
@@ -42,8 +49,9 @@ render: function() {
 </code></pre><hr class="attireSeparator mod1"><h3 id="getviewbymodel-model-" class="attireTitleType3">getViewByModel(model)</h3><p class="attireTextType2">Get parent sub-view by providing it's model instance.</p><pre class="attireCodeHighlight"><code class="lang-js">var childView = parentView.getViewByModel(model);
 </code></pre><hr class="attireSeparator mod1"><h3 id="removeviewbymodel-model-" class="attireTitleType3">removeViewByModel(model)</h3><p class="attireTextType2">Close sub-view by providing it's model instance.</p><pre class="attireCodeHighlight"><code class="lang-js">parentView.removeViewByModel(model);
 </code></pre><hr class="attireSeparator mod1"><h3 id="hasview-childview-" class="attireTitleType3">hasView(childView)</h3><p class="attireTextType2">Check if parent view has child sub-view.</p><pre class="attireCodeHighlight"><code class="lang-js">console.log(parentView.hasView(childView));
-</code></pre><hr class="attireSeparator mod1"><h3 id="detachview-" class="attireTitleType3">detachView()</h3><p class="attireTextType2">Detach view from parent registry.</p><pre class="attireCodeHighlight"><code class="lang-js">childView.detachView();
-</code></pre><hr class="attireSeparator mod1"><h3 id="attachtoview-parentview-group-" class="attireTitleType3">attachToView(parentView, group)</h3><p class="attireTextType2">Detach view from parent registry and attach to another view.</p><pre class="attireCodeHighlight"><code class="lang-js">childView.attachToView(parentView)
+</code></pre><hr class="attireSeparator mod1"><h3 id="detachview-" class="attireTitleType3">detachView()</h3><p class="attireTextType2">Detach view from parent sub-view registry.</p><pre class="attireCodeHighlight"><code class="lang-js">childView.detachView();
+</code></pre><hr class="attireSeparator mod1"><h3 id="attachtoview-parentview-group-" class="attireTitleType3">attachToView(parentView, group)</h3><p class="attireTextType2">Detach view from parent sub-view registry and attach to another view.</p><pre class="attireCodeHighlight"><code class="lang-js">childView.attachToView(parentView)
+</code></pre><hr class="attireSeparator mod1"><h3 id="appendto-view-" class="attireTitleType3">appendTo(view)</h3><p class="attireTextType2">Append view.$el to another view.$el. Other available methods are 'prependTo', 'insertBefore', 'insertAfter'.</p><pre class="attireCodeHighlight"><code class="lang-js">view.appendTo(parentView);
 </code></pre><hr class="attireSeparator mod1"><h3 id="when-resources-donecallback-failcallback-" class="attireTitleType3">when(resources, doneCallback, failCallback)</h3><p class="attireTextType2">Shortcut for $.when with default context set to view instance for all callbacks. Additionally adds all deferreds to view instance deferreds stack so effective cleanup can be performed on view removal. Accepts resources as single or array of deferreds.</p></div></section><section id="section-installation" class="attireBlock"><div class="inner"><h2 id="installation" class="attireTitleType2">Installation</h2><p class="attireTextType2">Backbone base view is packaged as UMD library so you can use it in CommonJS and AMD environment or with browser globals.</p><pre class="attireCodeHighlight"><code class="lang-bash">npm install backbone-base-view --save
 </code></pre><pre class="attireCodeHighlight"><code class="lang-js">// with bundlers
 var BaseView = require('backbone-base-view');

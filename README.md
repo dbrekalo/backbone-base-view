@@ -40,8 +40,21 @@ events: {
 ```
 ---
 
+### delegatedEvents: true|false
+View event handlers are delegated to instance element by default. Set to false to bind directly to elements found via event string selector.
+```js
+var View = BaseView.extend({
+    delegatedEvents: false,
+    events: {
+        'click .selector': 'handler'
+    }
+});
+var view = new View({foo:'bar'});
+```
+---
+
 ### addDismissListener(listenerName)
-When escape key is pressed or something outside of view.$el is clicked instance.listenerName will be invoked.
+When escape key is pressed or something outside of view.$el is clicked view.listenerName will be invoked.
 ```js
 ...
 open: function() {
@@ -57,12 +70,12 @@ close: function() {
 ---
 
 ### removeDismissListener(listenerName)
-Used for removing dismiss listeners. See example above.
+Use to remove dismiss listeners. See example above.
 
 ---
 
 ### addView(view, groupName)
-Used to setup parent-child view relationship. Child view is added to parent view group if groupName is specified.
+Use to setup parent-child view relationship. Child view is added to parent view group if groupName is specified.
 ```js
 ...
 initialize: function() {
@@ -75,7 +88,7 @@ initialize: function() {
 ---
 
 ### getGroupViews(groupName)
-Retrieve array of child views stored in group.
+Retrieve child views stored in parent group as array.
 ```js
 ...
 render: function() {
@@ -123,16 +136,23 @@ console.log(parentView.hasView(childView));
 ---
 
 ### detachView()
-Detach view from parent registry.
+Detach view from parent sub-view registry.
 ```js
 childView.detachView();
 ```
 ---
 
 ### attachToView(parentView, group)
-Detach view from parent registry and attach to another view.
+Detach view from parent sub-view registry and attach to another view.
 ```js
 childView.attachToView(parentView)
+```
+---
+
+### appendTo(view)
+Append view.$el to another view.$el. Other available methods are 'prependTo', 'insertBefore', 'insertAfter'.
+```js
+view.appendTo(parentView);
 ```
 ---
 

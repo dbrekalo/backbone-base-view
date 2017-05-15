@@ -1,5 +1,6 @@
 (function(root, factory) {
 
+    /* istanbul ignore next */
     if (typeof define === 'function' && define.amd) {
         define(['jquery', 'backbone', 'underscore'], factory);
     } else if (typeof module === 'object' && module.exports) {
@@ -10,14 +11,14 @@
 
 }(this, function($, Backbone, _) {
 
-    var root = this;
     var variableInEventStringRE = /{{(\S+)}}/g;
+
     var parseEventString = function(eventString, context) {
 
         return eventString.replace(variableInEventStringRE, function(match, namespace) {
 
             var isInCurrentContext = namespace.indexOf('this.') === 0,
-                current = isInCurrentContext ? context : root,
+                current = isInCurrentContext ? context : window,
                 pieces = (isInCurrentContext ? namespace.slice(5) : namespace).split('.');
 
             for (var i in pieces) {
@@ -289,7 +290,7 @@
                 this.addDeferred(resource);
             }, this);
 
-            var deferred = $.when.apply(root, resources);
+            var deferred = $.when.apply($, resources);
             doneCallback && deferred.done(_.bind(doneCallback, this));
             failCallback && deferred.fail(_.bind(failCallback, this));
 

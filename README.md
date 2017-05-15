@@ -12,7 +12,6 @@ inject variables into event strings and setup global window and document listene
 Enables easy composition of views with simple parent-child and model binding api that keeps you safe from memory leaks.
 
 ## Examples and api
----
 
 ### assignOptions: false|true|'deep'
 If defined user passed options will be merged with defaults and written to viewInstance.options. False by default.

@@ -67,6 +67,111 @@ describe('BaseView constructor', function() {
 
 });
 
+describe('BaseView option rules', function() {
+
+    it('type check provided options', function() {
+
+        var Guitarist = BaseView.extend({
+            assignOptions: true,
+            optionRules: {
+                name: {type: 'string'},
+                instrument: {type: 'string', required: false},
+            }
+        });
+
+        assert.throws(function() {
+            new Guitarist();
+        }, 'Option "name" is undefined, expected string.');
+
+        assert.throws(function() {
+            new Guitarist({
+                name: 'George',
+                instrument: 42
+            });
+        }, 'Option "instrument" is number, expected string.');
+
+    });
+
+    it('validate options with rule callback', function() {
+
+        var Guitarist = BaseView.extend({
+            assignOptions: true,
+            optionRules: {
+                age: {type: 'number', rule: function(age) {
+                    return age > 18;
+                }}
+            }
+        });
+
+        var GuitarPro = Guitarist.extend();
+
+        assert.throws(function() {
+            new Guitarist({
+                age: 'teen'
+            });
+        }, 'Option "age" is string, expected number. Option "age" breaks defined rule.');
+
+        assert.throws(function() {
+            new GuitarPro({
+                age: 15
+            });
+        }, 'Option "age" breaks defined rule.');
+
+    });
+
+    it('do option instance of checks', function() {
+
+        var Person = function() {};
+
+        var Guitarist = BaseView.extend({
+            assignOptions: true,
+            optionRules: {
+                mentor: {instanceOf: Person}
+            }
+        });
+
+        assert.throws(function() {
+            new Guitarist({
+                mentor: 'pero'
+            });
+        }, 'Option "mentor" is not instance of defined constructor.');
+
+        assert.throws(function() {
+            new Guitarist({
+                mentor: new Date()
+            });
+        }, 'Option "mentor" is not instance of defined constructor.');
+
+        assert.throws(function() {
+            new Guitarist();
+        }, 'Option "mentor" is not instance of defined constructor.');
+
+    });
+
+    it('merge default values', function() {
+
+        var Guitarist = BaseView.extend({
+            assignOptions: true,
+            defaults: {
+                instrument: 'guitar'
+            },
+            optionRules: {
+                name: {type: 'string', default: ''},
+                instrument: {type: 'string'},
+                age: {type: 'number', default: 18}
+            }
+        });
+
+        assert.deepEqual(new Guitarist().options, {
+            name: '',
+            instrument: 'guitar',
+            age: 18
+        });
+
+    });
+
+});
+
 describe('BaseView events', function() {
 
     it('can be defined as function or pointer to view function', function(done) {

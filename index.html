@@ -6,6 +6,15 @@
     }
 });
 var view = new View({foo:'bar'});
+</code></pre><hr class="attireSeparator mod1"><h3 id="options-type-checking-and-validation" class="attireTitleType3">Options type checking and validation</h3><p class="attireTextType2">Options provided by type defaults and and constructor parameters can be type checked.</p><pre class="attireCodeHighlight"><code class="lang-js">var MusicianView = BaseView.extend({
+    optionRules: {
+        instrument: {type: 'string'},
+        age: {type: 'number', default: 18, rule: function(age) {
+            return age &gt;= 18;
+        }},
+        mentor: {instanceOf: BaseView}
+    }
+});
 </code></pre><hr class="attireSeparator mod1"><h3 id="events" class="attireTitleType3">events</h3><p class="attireTextType2">Define one time events, inject variables and add window and document listeners.</p><pre class="attireCodeHighlight"><code class="lang-js">events: {
     'click .selector': 'handler',
     'click {{this.someVariable}}': 'handler', // variable will be injected

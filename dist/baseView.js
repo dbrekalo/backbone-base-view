@@ -11,7 +11,7 @@
 
 }(this, function($, Backbone, _) {
 
-    var variableInEventStringRE = /{{(\S+)}}/g;
+    var variableInEventStringRE = /{{\s*(\S+)\s*}}/g;
     var specialSelectors = {
         'window': window,
         'document': window.document
@@ -42,8 +42,8 @@
         constructor: function(options) {
 
             if (this.assignOptions) {
-                var defaults = _.result(this, 'defaults');
-                this.options = this.assignOptions === 'deep' ? $.extend(true, {}, defaults, options) : _.extend({}, defaults, options);
+                this.writeOptions.apply(this, arguments);
+                this.optionRules && this.validateOptions(this.options, this.optionRules);
             }
 
             Backbone.View.apply(this, arguments);
@@ -54,6 +54,60 @@
         delegatedEvents: true,
         parseEventVariables: true,
         assignOptions: false,
+
+        writeOptions: function(options) {
+
+            var defaults = _.result(this, 'defaults');
+            var ruleDefaults = {};
+
+            this.optionRules && _.each(this.optionRules, function(data, optionName) {
+                ruleDefaults[optionName] = data.default;
+            });
+
+            if (this.assignOptions === 'deep') {
+                this.options = $.extend(true, {}, defaults, ruleDefaults, options);
+            } else {
+                this.options = $.extend({}, defaults, ruleDefaults, options);
+            }
+
+            return this;
+
+        },
+
+        validateOptions: function(options, rules) {
+
+            var errors = [];
+
+            _.each(rules, function(data, optionName) {
+
+                var optionValue = options[optionName];
+                var optionValueType = typeof optionValue;
+
+                if (data.required !== false || optionValueType !== 'undefined') {
+
+                    if (data.type && optionValueType !== data.type) {
+                        errors.push('Option "' + optionName +'" is ' + optionValueType + ', expected ' + data.type + '.');
+                    }
+
+                    if (data.rule && !data.rule(optionValue)) {
+                        errors.push('Option "' + optionName +'" breaks defined rule.');
+                    }
+
+                    if (data.instanceOf && !(optionValue instanceof data.instanceOf)) {
+                        errors.push('Option "' + optionName +'" is not instance of defined constructor.');
+                    }
+
+                }
+
+            });
+
+            if (errors.length) {
+                throw new Error(errors.join(' '));
+            } else {
+                return this;
+            }
+
+        },
 
         setupEvents: function(eventsMap) {
 

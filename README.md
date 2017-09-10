@@ -13,6 +13,19 @@ Enables easy composition of views with simple parent-child and model binding api
 
 ## Examples and api
 
+### events
+Define one time events, inject variables and add window and document listeners.
+```js
+events: {
+    'click .selector': 'handler',
+    'click {{this.someVariable}}': 'handler', // variable will be injected
+    'one:submit form': 'oneSubmit', // handler will run only once
+    'resize window': 'onWindowResize',
+    'keyup document': 'onDocumentKeyup'
+}
+```
+---
+
 ### assignOptions: false|true|'deep'
 If defined user passed options will be merged with defaults and written to viewInstance.options. False by default.
 ```js
@@ -27,16 +40,18 @@ var view = new View({foo:'bar'});
 ```
 ---
 
-### events
-Define one time events, inject variables and add window and document listeners.
+### Options type checking and validation
+Options provided by type defaults and and constructor parameters can be type checked.
 ```js
-events: {
-    'click .selector': 'handler',
-    'click {{this.someVariable}}': 'handler', // variable will be injected
-    'one:submit form': 'oneSubmit', // handler will run only once
-    'resize window': 'onWindowResize',
-    'keyup document': 'onDocumentKeyup'
-}
+var MusicianView = BaseView.extend({
+    optionRules: {
+        instrument: {type: 'string'},
+        age: {type: 'number', default: 18, rule: function(age) {
+            return age >= 18;
+        }},
+        mentor: {instanceOf: BaseView}
+    }
+});
 ```
 ---
 

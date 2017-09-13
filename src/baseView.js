@@ -11,12 +11,36 @@
 
 }(this, function($, Backbone, _) {
 
+    var simpleTypes = [String, Number, Boolean, Function, Object, Array];
+    var simpleTypeNames = ['string', 'number', 'boolean', 'function', 'object', 'array'];
+
+    function validateType(value, Type, errorCallback) {
+
+        var simpleTypeIndex = simpleTypes.indexOf(Type);
+        var isComplexType = simpleTypeIndex < 0;
+        var typeName = simpleTypeIndex >= 0 && simpleTypeNames[simpleTypeIndex];
+
+        if (isComplexType) {
+            if (!(value instanceof Type)) {
+                errorCallback();
+            }
+        } else {
+            if (typeName === 'array') {
+                !_.isArray(value) && errorCallback();
+            } else if (typeof value !== typeName) {
+                errorCallback();
+            }
+        }
+
+    }
+
     var variableInEventStringRE = /{{\s*(\S+)\s*}}/g;
     var specialSelectors = {
         'window': window,
         'document': window.document
     };
-    var parseEventVariables = function(eventString, context) {
+
+    function parseEventVariables(eventString, context) {
 
         return eventString.replace(variableInEventStringRE, function(match, namespace) {
 
@@ -35,7 +59,7 @@
 
         });
 
-    };
+    }
 
     var BaseView = Backbone.View.extend({
 
@@ -61,7 +85,9 @@
             var ruleDefaults = {};
 
             this.optionRules && _.each(this.optionRules, function(data, optionName) {
-                ruleDefaults[optionName] = data.default;
+                if ($.isPlainObject(data) && typeof data.default !== 'undefined') {
+                    ruleDefaults[optionName] = _.result(data, 'default');
+                }
             });
 
             if (this.assignOptions === 'deep') {
@@ -76,35 +102,41 @@
 
         validateOptions: function(options, rules) {
 
-            var errors = [];
+            var errorMessages = [];
 
-            _.each(rules, function(data, optionName) {
+            _.each(rules, function(optionRules, optionName) {
 
                 var optionValue = options[optionName];
                 var optionValueType = typeof optionValue;
 
-                if (data.required !== false || optionValueType !== 'undefined') {
+                if (optionRules.required !== false || optionValueType !== 'undefined') {
 
-                    if (data.type && optionValueType !== data.type) {
-                        errors.push('Option "' + optionName +'" is ' + optionValueType + ', expected ' + data.type + '.');
+                    var userType = $.isPlainObject(optionRules) ? optionRules.type : optionRules;
+
+                    if (userType) {
+
+                        validateType(optionValue, userType, function() {
+                            errorMessages.push('Invalid type for option "' + optionName +'" ("' + optionValueType + '").');
+                        });
+
                     }
 
-                    if (data.rule && !data.rule(optionValue)) {
-                        errors.push('Option "' + optionName +'" breaks defined rule.');
-                    }
-
-                    if (data.instanceOf && !(optionValue instanceof data.instanceOf)) {
-                        errors.push('Option "' + optionName +'" is not instance of defined constructor.');
+                    if (optionRules.validator && !optionRules.validator(optionValue)) {
+                        errorMessages.push('Validation of option "' + optionName + '" failed.');
                     }
 
                 }
 
             });
 
-            if (errors.length) {
-                throw new Error(errors.join(' '));
-            } else {
-                return this;
+            return this.handleValidateOptionsErrors(errorMessages);
+
+        },
+
+        handleValidateOptionsErrors: function(errorMessages) {
+
+            if (errorMessages.length) {
+                throw new Error(errorMessages.join(' '));
             }
 
         },

@@ -41,15 +41,15 @@ var view = new View({foo:'bar'});
 ---
 
 ### Options type checking and validation
-Options provided by type defaults and and constructor parameters can be type checked.
+Options provided by type defaults and and constructor parameters can be type checked and validated.
 ```js
 var MusicianView = BaseView.extend({
     optionRules: {
-        instrument: {type: 'string'},
-        age: {type: 'number', default: 18, rule: function(age) {
+        instrument: String,
+        age: {type: Number, default: 18, validator: function(age) {
             return age >= 18;
         }},
-        mentor: {instanceOf: BaseView}
+        mentorView: {type: BaseView, required: false}
     }
 });
 ```

@@ -50,6 +50,7 @@ var MusicianView = BaseView.extend({
             return age >= 18;
         }},
         mentorView: {type: BaseView, required: false}
+        url: [String, Function]
     }
 });
 ```

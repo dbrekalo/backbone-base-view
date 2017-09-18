@@ -20,6 +20,7 @@ var view = new View({foo:'bar'});
             return age &gt;= 18;
         }},
         mentorView: {type: BaseView, required: false}
+        url: [String, Function]
     }
 });
 </code></pre><hr class="attireSeparator mod1"><h3 id="delegatedevents-true-false" class="attireTitleType3">delegatedEvents: true|false</h3><p class="attireTextType2">View event handlers are delegated to instance element by default. Set to false to bind directly to elements found via event string selector.</p><pre class="attireCodeHighlight"><code class="lang-js">var View = BaseView.extend({

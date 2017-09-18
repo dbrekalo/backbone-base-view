@@ -14,22 +14,35 @@
     var simpleTypes = [String, Number, Boolean, Function, Object, Array];
     var simpleTypeNames = ['string', 'number', 'boolean', 'function', 'object', 'array'];
 
-    function validateType(value, Type, errorCallback) {
+    function isOfValidType(value, Type, errorCallback) {
 
-        var simpleTypeIndex = simpleTypes.indexOf(Type);
-        var isComplexType = simpleTypeIndex < 0;
-        var typeName = simpleTypeIndex >= 0 && simpleTypeNames[simpleTypeIndex];
+        if (_.isArray(Type)) {
 
-        if (isComplexType) {
-            if (!(value instanceof Type)) {
-                errorCallback();
-            }
+            return _.some(Type, function(SingleType) {
+                return isOfValidType(value, SingleType);
+            });
+
         } else {
-            if (typeName === 'array') {
-                !_.isArray(value) && errorCallback();
-            } else if (typeof value !== typeName) {
-                errorCallback();
+
+            var isValid = true;
+            var simpleTypeIndex = simpleTypes.indexOf(Type);
+            var isComplexType = simpleTypeIndex < 0;
+            var typeName = simpleTypeIndex >= 0 && simpleTypeNames[simpleTypeIndex];
+
+            if (isComplexType) {
+                if (!(value instanceof Type)) {
+                    isValid = false;
+                }
+            } else {
+                if (typeName === 'array') {
+                    !_.isArray(value) && (isValid = false);
+                } else if (typeof value !== typeName) {
+                    isValid = false;
+                }
             }
+
+            return isValid;
+
         }
 
     }
@@ -83,6 +96,7 @@
 
             var defaults = _.result(this, 'defaults');
             var ruleDefaults = {};
+            var params = [{}, defaults, ruleDefaults, options];
 
             this.optionRules && _.each(this.optionRules, function(data, optionName) {
                 if ($.isPlainObject(data) && typeof data.default !== 'undefined') {
@@ -90,11 +104,8 @@
                 }
             });
 
-            if (this.assignOptions === 'deep') {
-                this.options = $.extend(true, {}, defaults, ruleDefaults, options);
-            } else {
-                this.options = $.extend({}, defaults, ruleDefaults, options);
-            }
+            this.assignOptions === 'deep' && params.unshift(true);
+            this.options = $.extend.apply($, params);
 
             return this;
 
@@ -113,12 +124,8 @@
 
                     var userType = $.isPlainObject(optionRules) ? optionRules.type : optionRules;
 
-                    if (userType) {
-
-                        validateType(optionValue, userType, function() {
-                            errorMessages.push('Invalid type for option "' + optionName +'" ("' + optionValueType + '").');
-                        });
-
+                    if (userType && !isOfValidType(optionValue, userType)) {
+                        errorMessages.push('Invalid type for option "' + optionName +'" ("' + optionValueType + '").');
                     }
 
                     if (optionRules.validator && !optionRules.validator(optionValue)) {

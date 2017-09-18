@@ -216,6 +216,33 @@ describe('BaseView option rules', function() {
 
     });
 
+    it('type checks multiple alowed types', function() {
+
+        var Guitarist = TypedView.extend({optionRules: {
+            url: {type: [String, Function]}
+        }});
+
+        var Lead = TypedView.extend({optionRules: {
+            url: [String, Function]
+        }});
+
+        assert.throws(function() {
+            new Guitarist({url: false});
+        }, 'Invalid type for option "url" ("boolean").');
+
+        assert.throws(function() {
+            new Lead({url: false});
+        }, 'Invalid type for option "url" ("boolean").');
+
+        assert.doesNotThrow(function() {
+            new Guitarist({url: 'test'});
+            new Guitarist({url: function() { return 'test'; }});
+            new Lead({url: 'test'});
+            new Lead({url: function() { return 'test'; }});
+        });
+
+    });
+
     it('merges default values with rule options defaults', function() {
 
         var Guitarist = TypedView.extend({
